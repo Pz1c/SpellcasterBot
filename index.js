@@ -16,7 +16,7 @@ var battles_in_ready = [];
 var battles_in_wait = [];
 
 const idx_l = 0, idx_r = 1;
-const arr_warlock = ['self', 'enemy'];
+const arr_warlock = ['enemy', 'self'];
 const arr_hand = ['L', 'R'];
 
 const SPELL_TYPE_SUMMON_MONSTER = 0;
@@ -85,51 +85,51 @@ const SPELL_STAB = 44;
 
 
 var arr_spells = [
-/* 0 */ {gesture:"cDPW",name:"Dispel Magic",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:3},
-/* 1 */ {gesture:"cSWWS",name:"Summon Ice Elemental",type:SPELL_TYPE_ELEMENTAL,priority:0,level:0},
-/* 2 */ {gesture:"cWSSW",name:"Summon Fire Elemental",type:SPELL_TYPE_ELEMENTAL,priority:0,level:1},
-/* 3 */ {gesture:"cw",name:"Magic Mirror",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0},
-/* 4 */ {gesture:"DFFDD",name:"Lightning Bolt",type:SPELL_TYPE_DAMAGE,priority:0,level:1},
-/* 5 */ {gesture:"DFPW",name:"Cure Heavy Wounds",type:SPELL_TYPE_CURE,priority:0,level:1},
-/* 6 */ {gesture:"DFW",name:"Cure Light Wounds",type:SPELL_TYPE_CURE,priority:0,level:0},
-/* 7 */ {gesture:"DFWFd",name:"Blindness",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 8 */ {gesture:"DPP",name:"Amnesia",type:SPELL_TYPE_CONFUSION,priority:0,level:1},
-/* 9 */ {gesture:"DSF",name:"Confusion/Maladroitness",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 10*/ {gesture:"DSFFFc",name:"Disease",type:SPELL_TYPE_POISON,priority:0,level:1},
-/* 11*/ {gesture:"DWFFd",name:"Blindness",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 12*/ {gesture:"DWSSSP",name:"Delay Effect",type:SPELL_TYPE_SPEC,priority:0,level:0},
-/* 13*/ {gesture:"DWWFWD",name:"Poison",type:SPELL_TYPE_POISON,priority:0,level:1},
-/* 14*/ {gesture:"FFF",name:"Paralysis",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 15*/ {gesture:"WFPSFW",name:"Summon Giant",type:SPELL_TYPE_SUMMON_MONSTER,priority:0,level:4},
-/* 16*/ {gesture:"FPSFW",name:"Summon Troll",type:SPELL_TYPE_SUMMON_MONSTER,priority:0,level:3},
-/* 17*/ {gesture:"PSFW",name:"Summon Ogre",type:SPELL_TYPE_SUMMON_MONSTER,priority:0,level:2},
-/* 18*/ {gesture:"SFW",name:"Summon Goblin",type:SPELL_TYPE_SUMMON_MONSTER,priority:0,level:1},
-/* 19*/ {gesture:"FSSDD",name:"Fireball",type:SPELL_TYPE_DAMAGE,priority:0,level:1},
-/* 20*/ {gesture:"P",name:"Shield",type:SPELL_TYPE_SHIELD,priority:0,level:0},
-/* 21*/ {gesture:"PDWP",name:"Remove Enchantment",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:2},
-/* 22*/ {gesture:"PPws",name:"Invisibility",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 23*/ {gesture:"PSDD",name:"Charm Monster",type:SPELL_TYPE_CHARM_MONSTER,priority:0,level:0},
-/* 24*/ {gesture:"PSDF",name:"Charm Person",type:SPELL_TYPE_CONFUSION,priority:0,level:2},
-/* 25*/ {gesture:"PWPFSSSD",name:"Finger of Death",type:SPELL_TYPE_DAMAGE,priority:0,level:0},
-/* 26*/ {gesture:"PWPWWc",name:"Haste",type:SPELL_TYPE_HASTLE,priority:0,level:0},
-/* 27*/ {gesture:"SD",name:"Magic Missile",type:SPELL_TYPE_DAMAGE,priority:0,level:0},
-/* 28*/ {gesture:"SPFP",name:"Anti-spell",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 29*/ {gesture:"SPFPSDW",name:"Permanency",type:SPELL_TYPE_SPEC,priority:0,level:0},
-/* 30*/ {gesture:"SPPc",name:"Time Stop",type:SPELL_TYPE_HASTLE,priority:0,level:0},
-/* 31*/ {gesture:"SPPFD",name:"Time Stop",type:SPELL_TYPE_HASTLE,priority:0,level:0},
-/* 32*/ {gesture:"SSFP",name:"Resist Cold",type:SPELL_TYPE_RESIST,priority:0,level:1},
-/* 33*/ {gesture:"SWD",name:"Fear (No CFDS)",type:SPELL_TYPE_CONFUSION,priority:0,level:0},
-/* 34*/ {gesture:"SWWc",name:"Fire Storm",type:SPELL_TYPE_MASSIVE,priority:0,level:0},
-/* 35*/ {gesture:"WDDc",name:"Clap of Lightning",type:SPELL_TYPE_DAMAGE,priority:0,level:0},
-/* 36*/ {gesture:"WFP",name:"Cause Light Wounds",type:SPELL_TYPE_DAMAGE,priority:0,level:0},
-/* 37*/ {gesture:"WPFD",name:"Cause Heavy Wounds",type:SPELL_TYPE_DAMAGE,priority:0,level:0},
-/* 38*/ {gesture:"WPP",name:"Counter Spell",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0},
-/* 39*/ {gesture:"WSSc",name:"Ice Storm",type:SPELL_TYPE_MASSIVE,priority:0,level:0},
-/* 40*/ {gesture:"WWFP",name:"Resist Heat",type:SPELL_TYPE_RESIST,priority:0,level:0},
-/* 41*/ {gesture:"WWP",name:"Protection",type:SPELL_TYPE_SHIELD,priority:0,level:1},
-/* 42*/ {gesture:"WWS",name:"Counter Spell",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:1},
-/* 43*/ {gesture:"p",name:"Surrender",type:SPELL_TYPE_SPEC,priority:0,level:0},
-/* 44*/ {gesture:">",name:"Stab",type:SPELL_TYPE_STAB,priority:0,level:0}
+/* 0 */ {gesture:"cDPW",name:"Dispel Magic",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:3,danger:4},
+/* 1 */ {gesture:"cSWWS",name:"Summon Ice Elemental",type:SPELL_TYPE_ELEMENTAL,priority:4,level:0,danger:5},
+/* 2 */ {gesture:"cWSSW",name:"Summon Fire Elemental",type:SPELL_TYPE_ELEMENTAL,priority:5,level:1,danger:5},
+/* 3 */ {gesture:"cw",name:"Magic Mirror",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0,danger:1},
+/* 4 */ {gesture:"DFFDD",name:"Lightning Bolt",type:SPELL_TYPE_DAMAGE,priority:3,level:1,danger:6},
+/* 5 */ {gesture:"DFPW",name:"Cure Heavy Wounds",type:SPELL_TYPE_CURE,priority:0,level:1,danger:0},
+/* 6 */ {gesture:"DFW",name:"Cure Light Wounds",type:SPELL_TYPE_CURE,priority:0,level:0,danger:0},
+/* 7 */ {gesture:"DFWFd",name:"Blindness",type:SPELL_TYPE_CONFUSION,priority:4,level:0,danger:5},
+/* 8 */ {gesture:"DPP",name:"Amnesia",type:SPELL_TYPE_CONFUSION,priority:6,level:1,danger:2},
+/* 9 */ {gesture:"DSF",name:"Confusion/Maladroitness",type:SPELL_TYPE_CONFUSION,priority:6,level:0,danger:2},
+/* 10*/ {gesture:"DSFFFc",name:"Disease",type:SPELL_TYPE_POISON,priority:4,level:1,danger:7},
+/* 11*/ {gesture:"DWFFd",name:"Blindness",type:SPELL_TYPE_CONFUSION,priority:4,level:0,danger:5},
+/* 12*/ {gesture:"DWSSSP",name:"Delay Effect",type:SPELL_TYPE_SPEC,priority:0,level:0,danger:1},
+/* 13*/ {gesture:"DWWFWD",name:"Poison",type:SPELL_TYPE_POISON,priority:3,level:1,danger:8},
+/* 14*/ {gesture:"FFF",name:"Paralysis",type:SPELL_TYPE_CONFUSION,priority:5,level:0,danger:2},
+/* 15*/ {gesture:"WFPSFW",name:"Summon Giant",type:SPELL_TYPE_SUMMON_MONSTER,priority:4,level:4,danger:4},
+/* 16*/ {gesture:"FPSFW",name:"Summon Troll",type:SPELL_TYPE_SUMMON_MONSTER,priority:3,level:3,danger:3},
+/* 17*/ {gesture:"PSFW",name:"Summon Ogre",type:SPELL_TYPE_SUMMON_MONSTER,priority:2,level:2,danger:2},
+/* 18*/ {gesture:"SFW",name:"Summon Goblin",type:SPELL_TYPE_SUMMON_MONSTER,priority:1,level:1,danger:1},
+/* 19*/ {gesture:"FSSDD",name:"Fireball",type:SPELL_TYPE_DAMAGE,priority:3,level:1,danger:5},
+/* 20*/ {gesture:"P",name:"Shield",type:SPELL_TYPE_SHIELD,priority:0,level:0,danger:0},
+/* 21*/ {gesture:"PDWP",name:"Remove Enchantment",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:2,danger:3},
+/* 22*/ {gesture:"PPws",name:"Invisibility",type:SPELL_TYPE_CONFUSION,priority:3,level:0,danger:0,danger:3},
+/* 23*/ {gesture:"PSDD",name:"Charm Monster",type:SPELL_TYPE_CHARM_MONSTER,priority:0,level:0,danger:2},
+/* 24*/ {gesture:"PSDF",name:"Charm Person",type:SPELL_TYPE_CONFUSION,priority:4,level:2,danger:3},
+/* 25*/ {gesture:"PWPFSSSD",name:"Finger of Death",type:SPELL_TYPE_DAMAGE,priority:1,level:0,danger:10},
+/* 26*/ {gesture:"PWPWWc",name:"Haste",type:SPELL_TYPE_HASTLE,priority:2,level:0,danger:4},
+/* 27*/ {gesture:"SD",name:"Magic Missile",type:SPELL_TYPE_DAMAGE,priority:0,level:0,danger:1},
+/* 28*/ {gesture:"SPFP",name:"Anti-spell",type:SPELL_TYPE_CONFUSION,priority:5,level:0,danger:4},
+/* 29*/ {gesture:"SPFPSDW",name:"Permanency",type:SPELL_TYPE_SPEC,priority:3,level:0,danger:6},
+/* 30*/ {gesture:"SPPc",name:"Time Stop",type:SPELL_TYPE_HASTLE,priority:3,level:0,danger:3},
+/* 31*/ {gesture:"SPPFD",name:"Time Stop",type:SPELL_TYPE_HASTLE,priority:3,level:0,danger:3},
+/* 32*/ {gesture:"SSFP",name:"Resist Cold",type:SPELL_TYPE_RESIST,priority:4,level:1,danger:1},
+/* 33*/ {gesture:"SWD",name:"Fear (No CFDS)",type:SPELL_TYPE_CONFUSION,priority:5,level:0,danger:2},
+/* 34*/ {gesture:"SWWc",name:"Fire Storm",type:SPELL_TYPE_MASSIVE,priority:3,level:0,danger:6},
+/* 35*/ {gesture:"WDDc",name:"Clap of Lightning",type:SPELL_TYPE_DAMAGE,priority:4,level:0,danger:5},
+/* 36*/ {gesture:"WFP",name:"Cause Light Wounds",type:SPELL_TYPE_DAMAGE,priority:4,level:0,danger:2},
+/* 37*/ {gesture:"WPFD",name:"Cause Heavy Wounds",type:SPELL_TYPE_DAMAGE,priority:3,level:0,danger:3},
+/* 38*/ {gesture:"WPP",name:"Counter Spell",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0,danger:1},
+/* 39*/ {gesture:"WSSc",name:"Ice Storm",type:SPELL_TYPE_MASSIVE,priority:0,level:3,danger:6},
+/* 40*/ {gesture:"WWFP",name:"Resist Heat",type:SPELL_TYPE_RESIST,priority:0,level:4,danger:1},
+/* 41*/ {gesture:"WWP",name:"Protection",type:SPELL_TYPE_SHIELD,priority:0,level:1,danger:0},
+/* 42*/ {gesture:"WWS",name:"Counter Spell",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:1,danger:1},
+/* 43*/ {gesture:"p",name:"Surrender",type:SPELL_TYPE_SPEC,priority:-10,level:0,danger:0},
+/* 44*/ {gesture:">",name:"Stab",type:SPELL_TYPE_STAB,priority:-1,level:0,danger:0}
 ];
 
 
@@ -168,15 +168,18 @@ function login() {
         password: WARLOCK_PASSWORD
         }
      }, function(err,httpResponse,body) {
-    console.log('error:', err); // Print the error if one occurred
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
-    console.log('body:', body); // Print the HTML for the Google homepage.
-    if ((httpResponse.statusCode === 302) && (httpResponse.headers['location'] === 'player')) {
-      warlock_logined = true;
-      nextCycle();
-    } else {
-      fatal_error = true;
-    }
+        if (err) {
+          console.log('error:', err); // Print the error if one occurred
+          return;
+        }
+        console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+        console.log('body:', body); // Print the HTML for the Google homepage.
+        if ((httpResponse.statusCode === 302) && (httpResponse.headers['location'] === 'player')) {
+          warlock_logined = true;
+          nextCycle();
+        } else {
+          fatal_error = true;
+        }
   });
 }
 
@@ -186,7 +189,10 @@ function checkReadyBattle() {
       jar: true,
       followRedirect: true
      }, function(err,httpResponse,body) {
-    console.log('error:', err); // Print the error if one occurred
+    if (err) {
+      console.log('error:', err); // Print the error if one occurred
+      return;
+    }
     console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body); // Print the HTML for the Google homepage.
     battles_in_ready = parseBattles(body, 'Ready in battles');
@@ -289,13 +295,17 @@ function checkPossibleSpells(battle) {
   battle.enemy.possible_spell = [];
   battle.self.possible_spell = [];
   for (var i = 0, Ln = arr_spells.length; i < Ln; ++i) {
-    //console.log('checkPossibleSpells', i, arr_spells[i]);
-    var turn_to_cast = checkSpellPosible(battle.enemy.left, battle.enemy.right, arr_spells[i].gesture);
-    //console.log('enemy', 'left', turn_to_cast);
-    if (turn_to_cast > 0) {
-      battle.enemy.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'L'});
+    //console.log('checkPossibleSpells', i, arr_spells[i].gesture, arr_spells[i].name);
+    for (var w = 0; w < 2; ++w) {
+      for (var h = 0; h < 2; ++h) {
+        var turn_to_cast = checkSpellPosible(h === 0 ? battle[arr_warlock[w]].left : battle[arr_warlock[w]].right, h === 0 ? battle[arr_warlock[w]].right : battle[arr_warlock[w]].left, arr_spells[i].gesture);
+        //console.log(arr_warlock[w], arr_hand[h], turn_to_cast);
+        if (turn_to_cast > 0) {
+          battle[arr_warlock[w]].possible_spell.push({spell_id:i,turn:turn_to_cast,hand:arr_hand[h]});
+        }
+      }
     }
-    turn_to_cast = checkSpellPosible(battle.enemy.right, battle.enemy.left, arr_spells[i].gesture);
+    /*turn_to_cast = checkSpellPosible(battle.enemy.right, battle.enemy.left, arr_spells[i].gesture);
     //console.log('enemy', 'right', turn_to_cast);
     if (turn_to_cast > 0) {
       battle.enemy.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'R'});
@@ -309,44 +319,67 @@ function checkPossibleSpells(battle) {
     //console.log('self', 'right', turn_to_cast);
     if (turn_to_cast > 0) {
       battle.self.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'R'});
-    }
+    }*/
   }
   //console.log('checkPossibleSpells', battle);
 }
 
+function calcSpellPriority(warlock_code, priority, danger, turn) {
+  if (warlock_code === arr_warlock[1]) {// self
+    return priority - turn;
+  } else { // enemy
+    return danger - turn;
+  }
+}
+
 function checkWarlockSpells(warlock_code, battle) {
-  battle[warlock_code].turn_min_L = 0;
-  battle[warlock_code].turn_min_R = 0;
+  battle[warlock_code].priority_max_L = 0;
+  battle[warlock_code].priority_max_R = 0;
   for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
-    battle[warlock_code][arr_spell_type[i]] = [{spell_id:0,level:0,turn:0,hand:'L',priority:0}, {spell_id:0,level:0,turn:0,hand:'R',priority:0}];
+    battle[warlock_code][arr_spell_type[i]] = [{spell_id:0,level:0,turn:0,hand:'L',priority:0,danger:0}, {spell_id:0,level:0,turn:0,hand:'R',priority:0,danger:0}];
   }
   var sps = battle[warlock_code].possible_spell;
   for (var i = 0, Ln = sps.length; i < Ln; ++i) {
     var spell = arr_spells[sps[i].spell_id];
     for (var h = 0; h < 2; ++h) {
       var sspell = battle[warlock_code][arr_spell_type[spell.type]][h];
-      if (!battle[warlock_code]['turn_min_' + arr_hand[h]] || (battle[warlock_code]['turn_min_' + arr_hand[h]] > sspell.turn)) {
-        battle[warlock_code]['turn_min_' + arr_hand[h]] = sspell.turn;
+      var priority = calcSpellPriority(warlock_code, spell.priority, spell.danger, sps[i].turn);
+      if (!battle[warlock_code]['priority_max_' + arr_hand[h]] || (battle[warlock_code]['priority_max_' + arr_hand[h]] > priority)) {
+        battle[warlock_code]['priority_max_' + arr_hand[h]] = priority;
       }
       if (((spell.type === SPELL_TYPE_SUMMON_MONSTER) && !battle[warlock_code][arr_spell_type[spell.type]][h].level && (arr_hand[h] === sps[i].hand)) ||
           ((spell.type != SPELL_TYPE_SUMMON_MONSTER) && ((sspell.turn === 0) || (sspell.turn > spell.turn)) && (arr_hand[h] === sps[i].hand))) {
         battle[warlock_code][arr_spell_type[spell.type]][h].level = spell.level;
         battle[warlock_code][arr_spell_type[spell.type]][h].turn = sps[i].turn;
         battle[warlock_code][arr_spell_type[spell.type]][h].spell_id = sps[i].spell_id;
-        battle[warlock_code][arr_spell_type[spell.type]][h].priority = spell.priority;
+        battle[warlock_code][arr_spell_type[spell.type]][h].priority = priority;
       }
     }
   }
 }
 
 function checkMostPossibleSpells(warlock_code, battle) {
-  /*for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
-    
-  }*/
+  battle[warlock_code].spell_L = {};
+  battle[warlock_code].spell_R = {};
+  for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
+    for (var h = 0; h < 2; ++h) {
+      if (battle[warlock_code][arr_spell_type[i]][h].priority === battle[warlock_code]['priority_max_' + arr_hand[h]]) {
+        battle[warlock_code]['spell_' + arr_hand[h]] = battle[warlock_code][arr_spell_type[i]][h];
+      }
+    }
+  }
+  console.log('checkMostPossibleSpells', warlock_code, battle[warlock_code].spell_L, battle[warlock_code].spell_R);
+}
+
+function getAntiSpell(battle, enemy_spell, hand) {
+  battle.self['gesture_' + hand] = '';
 }
 
 function spellDecision(battle) {
+  getAntiSpell(battle, battle.enemy.spell_L, 'L');
+  getAntiSpell(battle, battle.enemy.spell_R, 'R');
   
+  console.log('spellDecision', battle.self.gesture_L, battle.self.gesture_R);
 }
 
 function battleDecision(battle) {
@@ -385,7 +418,10 @@ function startBattleProcessing(battle_id) {
       jar: true,
       followRedirect: true
      }, function(err,httpResponse,body) {
-    console.log('error:', err); // Print the error if one occurred
+    if (err) {
+      console.log('error:', err); // Print the error if one occurred
+      return;
+    }
     console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body);
     
@@ -514,7 +550,10 @@ function checkChallenges() {
       jar: true,
       followRedirect: true
      }, function(err,httpResponse,body) {
-    console.log('error:', err); // Print the error if one occurred
+    if (err) {
+      console.log('error:', err); // Print the error if one occurred
+      return;
+    }
     console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body); // Print the HTML for the Google homepage.
     var battles_to_accept = parseChallenges(body);
@@ -535,7 +574,10 @@ function acceptChallenge(battle_id) {
       jar: true,
       followRedirect: true
      }, function(err,httpResponse,body) {
-    console.log('error:', err); // Print the error if one occurred
+    if (err) {
+      console.log('error:', err); // Print the error if one occurred
+      return;
+    }
     console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body);
   });
