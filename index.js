@@ -34,9 +34,10 @@ const SPELL_TYPE_SPEC = 10;
 const SPELL_TYPE_DEATH = 11;
 const SPELL_TYPE_RESIST = 12;
 const SPELL_TYPE_ELEMENTAL = 13;
-const SPELL_TYPE_STAB = 14;
+const SPELL_TYPE_REMOVE_ENCHANTMENT = 14;
+const SPELL_TYPE_STAB = 15;
 const arr_spell_type = ['summon_monster', 'poison', 'confusion', 'damage', 'shield', 'magic_shield', 'massive', 
-                        'hastle', 'charm_monster', 'cure', 'spec', 'deatch', 'resist', 'elemental'];
+                        'hastle', 'charm_monster', 'cure', 'spec', 'deatch', 'resist', 'elemental', 'remove_enchantment'];
 
 const SPELL_DISPEL_MAGIC = 0;
 const SPELL_SUMMON_ICE_ELEMENTAL = 1;
@@ -86,7 +87,7 @@ const SPELL_STAB = 44;
 
 
 var arr_spells = [
-/* 0 */ {gesture:"cDPW",name:"Dispel Magic",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:3,danger:10},
+/* 0 */ {gesture:"cDPW",name:"Dispel Magic",type:SPELL_TYPE_REMOVE_ENCHANTMENT,priority:0,level:1,danger:10},
 /* 1 */ {gesture:"cSWWS",name:"Summon Ice Elemental",type:SPELL_TYPE_ELEMENTAL,priority:4,level:0,danger:15},
 /* 2 */ {gesture:"cWSSW",name:"Summon Fire Elemental",type:SPELL_TYPE_ELEMENTAL,priority:5,level:1,danger:15},
 /* 3 */ {gesture:"cw",name:"Magic Mirror",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0,danger:10},
@@ -107,7 +108,7 @@ var arr_spells = [
 /* 18*/ {gesture:"SFW",name:"Summon Goblin",type:SPELL_TYPE_SUMMON_MONSTER,priority:1,level:1,danger:11},
 /* 19*/ {gesture:"FSSDD",name:"Fireball",type:SPELL_TYPE_DAMAGE,priority:3,level:1,danger:15},
 /* 20*/ {gesture:"P",name:"Shield",type:SPELL_TYPE_SHIELD,priority:0,level:0,danger:10},
-/* 21*/ {gesture:"PDWP",name:"Remove Enchantment",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:2,danger:13},
+/* 21*/ {gesture:"PDWP",name:"Remove Enchantment",type:SPELL_TYPE_REMOVE_ENCHANTMENT,priority:0,level:0,danger:13},
 /* 22*/ {gesture:"PPws",name:"Invisibility",type:SPELL_TYPE_CONFUSION,priority:3,level:0,danger:0,danger:13},
 /* 23*/ {gesture:"PSDD",name:"Charm Monster",type:SPELL_TYPE_CHARM_MONSTER,priority:0,level:0,danger:12},
 /* 24*/ {gesture:"PSDF",name:"Charm Person",type:SPELL_TYPE_CONFUSION,priority:4,level:2,danger:13},
@@ -337,25 +338,30 @@ function calcSpellPriority(warlock_code, priority, danger, turn) {
 function checkWarlockSpells(warlock_code, battle) {
   battle[warlock_code].priority_max_L = 0;
   battle[warlock_code].priority_max_R = 0;
-  for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
+  battle[warlock_code].priority_sum_L = 0;
+  battle[warlock_code].priority_sum_R = 0;
+  /*for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
     battle[warlock_code][arr_spell_type[i]] = [{spell_id:0,level:0,turn:0,hand:'L',priority:0,danger:0}, {spell_id:0,level:0,turn:0,hand:'R',priority:0,danger:0}];
-  }
+  }*/
   var sps = battle[warlock_code].possible_spell;
   for (var i = 0, Ln = sps.length; i < Ln; ++i) {
     var spell = arr_spells[sps[i].spell_id];
     for (var h = 0; h < 2; ++h) {
       var sspell = battle[warlock_code][arr_spell_type[spell.type]][h];
       var priority = calcSpellPriority(warlock_code, spell.priority, spell.danger, sps[i].turn);
+      battle[warlock_code]['priority_sum_' + arr_hand[h]] += priority;
       if (!battle[warlock_code]['priority_max_' + arr_hand[h]] || (battle[warlock_code]['priority_max_' + arr_hand[h]] < priority)) {
         battle[warlock_code]['priority_max_' + arr_hand[h]] = priority;
       }
-      if (((spell.type === SPELL_TYPE_SUMMON_MONSTER) && !battle[warlock_code][arr_spell_type[spell.type]][h].level && (arr_hand[h] === sps[i].hand)) ||
+      battle[warlock_code].possible_spell[i].level = spell.level;
+      battle[warlock_code].possible_spell[i].priority = priority;
+      /*if (((spell.type === SPELL_TYPE_SUMMON_MONSTER) && !battle[warlock_code][arr_spell_type[spell.type]][h].level && (arr_hand[h] === sps[i].hand)) ||
           ((spell.type != SPELL_TYPE_SUMMON_MONSTER) && ((sspell.turn === 0) || (sspell.turn > spell.turn)) && (arr_hand[h] === sps[i].hand))) {
         battle[warlock_code][arr_spell_type[spell.type]][h].level = spell.level;
         battle[warlock_code][arr_spell_type[spell.type]][h].turn = sps[i].turn;
         battle[warlock_code][arr_spell_type[spell.type]][h].spell_id = sps[i].spell_id;
         battle[warlock_code][arr_spell_type[spell.type]][h].priority = priority;
-      }
+      }*/
     }
   }
 }
@@ -363,28 +369,79 @@ function checkWarlockSpells(warlock_code, battle) {
 function checkMostPossibleSpells(warlock_code, battle) {
   battle[warlock_code].spell_L = {};
   battle[warlock_code].spell_R = {};
-  for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
+  var sps = battle[warlock_code].possible_spell;
+  for (var i = 0, Ln = sps.length; i < Ln; ++i) {
     for (var h = 0; h < 2; ++h) {
-      if (battle[warlock_code][arr_spell_type[i]][h].priority === battle[warlock_code]['priority_max_' + arr_hand[h]]) {
-        battle[warlock_code]['spell_' + arr_hand[h]] = battle[warlock_code][arr_spell_type[i]][h];
+      if ((sps[i].priority === battle[warlock_code]['priority_max_' + arr_hand[h]]) && (sps[i].hand = arr_hand[h])) {
+        battle[warlock_code]['spell_' + arr_hand[h]] = sps[i];
       }
     }
   }
   console.log('checkMostPossibleSpells', warlock_code, battle[warlock_code].spell_L, battle[warlock_code].spell_R);
 }
 
+function getChipHand(warlock) {
+  return warlock.priority_sum_L > warlock.priority_sum_R ? 'L' : 'R';
+}
+
+function checkIsPossibleDestroySpell(battle, enemy_spell) {
+  var ps = battle.self.possible_spell;
+  for (var i = 0, Ln = ps.length; i < Ln; ++i) {
+    var pss = battle.self.possible_spell[i];
+    switch(arr_spells[pss.spell_id].type) {
+      case SPELL_TYPE_REMOVE_ENCHANTMENT:
+      case SPELL_TYPE_MAGIC_SHIELD:
+        if (pss.turn === enemy_spell.turn) {
+          return pss;
+        }
+        break;
+      case SPELL_TYPE_CONFUSION:
+        if (pss.turn + 1 >= enemy_spell.turn) {
+          return pss;
+        }
+        break;
+    }
+  }
+  if (enemy_spell.turn >= 4) {
+    return {spell_id:SPELL_AMNESIA,turn:3,hand:getChipHand(battle.self)};
+  }
+  if (enemy_spell.turn === 3) {
+    return {spell_id:SPELL_COUNTER_SPELL1,turn:3,hand:getChipHand(battle.self)};
+  }
+  if (enemy_spell.turn === 2) {
+    return {spell_id:SPELL_MAGIC_MIRROR,turn:2,hand:'L'};
+  }
+ 
+  return 0;
+}
+
+function setGestureBySpell(battle, self_spell) {
+  var gesture = arr_spells[self_spell.spell_id].gesture;
+  var chr = gesture.substr(gesture.length - self_spell.turn, 1);
+  if (chr.toUpperCase() === chr) {
+    battle.self['gesture_' + self_spell.hand] = chr;
+  } else {
+    battle.self.gesture_L = chr.toUpperCase();
+    battle.self.gesture_R = battle.self.gesture_L;
+  }  
+}
+
 function getAntiSpell(battle, enemy_spell) {
-  switch(enemy_spell.type) {
+  var asd = checkIsPossibleDestroySpell(battle, enemy_spell);
+  if (asd) {
+    setGestureBySpell(battle, ads);
+  }
+  /*switch(enemy_spell.type) {
     //case SPELL_TYPE_CHARM_MONSTER:
     case SPELL_TYPE_CONFUSION:
     case SPELL_TYPE_DAMAGE:
     case SPELL_TYPE_POISON:
     case SPELL_TYPE_DEATH:
-      var asd = checkIsPossibleDestroySpell(battle, enemy_spell);
+      
       break;
     case SPELL_TYPE_MASSIVE:
       break;
-  }
+  }*/
 }
 
 function spellDecision(battle) {
@@ -392,6 +449,13 @@ function spellDecision(battle) {
   battle.self.gesture_R = '';
   getAntiSpell(battle, battle.enemy.spell_L.turn < battle.enemy.spell_R.turn ? battle.enemy.spell_L : battle.enemy.spell_R);
   getAntiSpell(battle, battle.enemy.spell_L.turn < battle.enemy.spell_R.turn ? battle.enemy.spell_R : battle.enemy.spell_L);
+  
+  if (battle.self.gesture_L === '') {
+    setGestureBySpell(battle, battle.self.spell_L);
+  }
+  if (battle.self.gesture_R === '') {
+    setGestureBySpell(battle, battle.self.spell_R);
+  }
   
   console.log('spellDecision', battle.self.gesture_L, battle.self.gesture_R);
 }
