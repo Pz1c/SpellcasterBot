@@ -73,7 +73,7 @@ var arr_spells = [
 /* 1 */ {gesture:"cSWWS",name:"Summon Ice Elemental",type:SPELL_TYPE_ELEMENTAL,priority:4,level:0,danger:15},
 /* 2 */ {gesture:"cWSSW",name:"Summon Fire Elemental",type:SPELL_TYPE_ELEMENTAL,priority:5,level:1,danger:15},
 /* 3 */ {gesture:"cw",name:"Magic Mirror",type:SPELL_TYPE_MAGIC_SHIELD,priority:0,level:0,danger:10},
-/* 4 */ {gesture:"DFFDD",name:"Lightning Bolt",type:SPELL_TYPE_DAMAGE,priority:3,level:1,danger:16},
+/* 4 */ {gesture:"DFFDD",name:"Lightning Bolt",type:SPELL_TYPE_DAMAGE,priority:1,level:1,danger:16},
 /* 5 */ {gesture:"DFPW",name:"Cure Heavy Wounds",type:SPELL_TYPE_CURE,priority:0,level:1,danger:10},
 /* 6 */ {gesture:"DFW",name:"Cure Light Wounds",type:SPELL_TYPE_CURE,priority:0,level:0,danger:10},
 /* 7 */ {gesture:"DFWFd",name:"Blindness",type:SPELL_TYPE_CONFUSION,priority:4,level:0,danger:15},
@@ -127,8 +127,27 @@ function checkSpellChar(left, right, spell) {
     return true;
 }
 
-function checkSpellPosible(left, right, spell) {
+function checkStriktSpell(left, right, spell) {
+    var Ln = spell.length;
+    if (left.length < Ln) {
+        return false;
+    }
+
+    for (var i = 0; i < Ln; ++i) {
+        if (!checkSpellChar(left.substr(i, 1), right.substr(i, 1), spell.substr(i, 1))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function checkSpellPosible(left, right, spell, strict) {
     //console.log('checkSpellPosible', left, right, spell);
+    if (strict) {
+      return checkStriktSpell(left, right, spell) ? 0 : -1;
+    }
+    
     var Ln = spell.length - 1, GLn = left.length < right.length ? left.length : right.length;
     if (Ln == 0) {
         return 0;
@@ -155,7 +174,7 @@ function checkSpellPosible(left, right, spell) {
             return i + 1;
         }
     }
-    return 0;
+    return -1;
 }
 
 function checkPossibleSpells(battle) {
@@ -165,28 +184,13 @@ function checkPossibleSpells(battle) {
     //console.log('checkPossibleSpells', i, arr_spells[i].gesture, arr_spells[i].name);
     for (var w = 0; w < 2; ++w) {
       for (var h = 0; h < 2; ++h) {
-        var turn_to_cast = checkSpellPosible(h === 0 ? battle[arr_warlock[w]].left : battle[arr_warlock[w]].right, h === 0 ? battle[arr_warlock[w]].right : battle[arr_warlock[w]].left, arr_spells[i].gesture);
+        var turn_to_cast = checkSpellPosible(h === 0 ? battle[arr_warlock[w]].left : battle[arr_warlock[w]].right, h === 0 ? battle[arr_warlock[w]].right : battle[arr_warlock[w]].left, arr_spells[i].gesture, false);
         //console.log(arr_warlock[w], arr_hand[h], turn_to_cast);
         if (turn_to_cast > 0) {
           battle[arr_warlock[w]].possible_spell.push({spell_id:i,turn:turn_to_cast,hand:arr_hand[h]});
         }
       }
     }
-    /*turn_to_cast = checkSpellPosible(battle.enemy.right, battle.enemy.left, arr_spells[i].gesture);
-    //console.log('enemy', 'right', turn_to_cast);
-    if (turn_to_cast > 0) {
-      battle.enemy.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'R'});
-    }
-    turn_to_cast = checkSpellPosible(battle.self.left, battle.self.right, arr_spells[i].gesture);
-    //console.log('self', 'left', turn_to_cast);
-    if (turn_to_cast > 0) {
-      battle.self.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'L'});
-    }
-    turn_to_cast = checkSpellPosible(battle.self.right, battle.self.left, arr_spells[i].gesture);
-    //console.log('self', 'right', turn_to_cast);
-    if (turn_to_cast > 0) {
-      battle.self.possible_spell.push({spell_id:i,turn:turn_to_cast,hand:'R'});
-    }*/
   }
   //console.log('checkPossibleSpells', battle);
 }
@@ -204,9 +208,7 @@ function checkWarlockSpells(warlock_code, battle) {
   battle[warlock_code].priority_max_R = 0;
   battle[warlock_code].priority_sum_L = 0;
   battle[warlock_code].priority_sum_R = 0;
-  /*for (var i = 0, Ln = arr_spell_type.length; i < Ln; ++i) {
-    battle[warlock_code][arr_spell_type[i]] = [{spell_id:0,level:0,turn:0,hand:'L',priority:0,danger:0}, {spell_id:0,level:0,turn:0,hand:'R',priority:0,danger:0}];
-  }*/
+  
   var sps = battle[warlock_code].possible_spell;
   for (var i = 0, Ln = sps.length; i < Ln; ++i) {
     var spell = arr_spells[sps[i].spell_id];
@@ -218,13 +220,6 @@ function checkWarlockSpells(warlock_code, battle) {
       }
       battle[warlock_code].possible_spell[i].level = spell.level;
       battle[warlock_code].possible_spell[i].priority = priority;
-      /*if (((spell.type === SPELL_TYPE_SUMMON_MONSTER) && !battle[warlock_code][arr_spell_type[spell.type]][h].level && (arr_hand[h] === sps[i].hand)) ||
-          ((spell.type != SPELL_TYPE_SUMMON_MONSTER) && ((sspell.turn === 0) || (sspell.turn > spell.turn)) && (arr_hand[h] === sps[i].hand))) {
-        battle[warlock_code][arr_spell_type[spell.type]][h].level = spell.level;
-        battle[warlock_code][arr_spell_type[spell.type]][h].turn = sps[i].turn;
-        battle[warlock_code][arr_spell_type[spell.type]][h].spell_id = sps[i].spell_id;
-        battle[warlock_code][arr_spell_type[spell.type]][h].priority = priority;
-      }*/
     }
   }
 }
@@ -235,7 +230,10 @@ function checkMostPossibleSpells(warlock_code, battle) {
   var sps = battle[warlock_code].possible_spell;
   for (var i = 0, Ln = sps.length; i < Ln; ++i) {
     for (var h = 0; h < 2; ++h) {
-      if ((sps[i].priority === battle[warlock_code]['priority_max_' + arr_hand[h]]) && (sps[i].hand = arr_hand[h])) {
+      if (sps[i].hand != arr_hand[h]) {
+        continue;
+      }
+      if (sps[i].priority === battle[warlock_code]['priority_max_' + arr_hand[h]]) {
         battle[warlock_code]['spell_' + arr_hand[h]] = sps[i];
       }
     }
@@ -315,54 +313,83 @@ function spellDecision(battle) {
   getAntiSpell(battle, battle.enemy.spell_L.turn < battle.enemy.spell_R.turn ? battle.enemy.spell_R : battle.enemy.spell_L);
   
   if (battle.self.gesture_L === '') {
-    if (!battle.self.spell_L.turn) {
+    console.log('spellDecision', 'L', battle.self.spell_L);
+    if (!battle.self.spell_L) {
       battle.self.spell_L = {spell_id:SPELL_CONFUSION,hand:'L',turn:3};
     }
     setGestureBySpell(battle, battle.self.spell_L);
   }
   if (battle.self.gesture_R === '') {
-    if (!battle.self.spell_R.turn) {
+    console.log('spellDecision', 'R', battle.self.spell_R);
+    if (!battle.self.spell_R) {
       battle.self.spell_R = {spell_id:SPELL_CHARM_PERSON,hand:'R',turn:4};
     }
     setGestureBySpell(battle, battle.self.spell_R);
   }
   
-  console.log('spellDecision', battle.self.gesture_L, battle.self.gesture_R);
+  console.log('spellDecision', 'L=' + battle.self.gesture_L, 'R=' + battle.self.gesture_R);
 }
 
-function battleDecision(battle) {
+function checkSpellCast(battle) {
+  battle.self.cast_spell_L = '';
+  battle.self.cast_spell_R = '';
+
+  var new_L = battle.self.left + battle.self.gesture_L;
+  var new_R = battle.self.right + battle.self.gesture_R;
+  battle.self.spell_L = [];
+  battle.self.spell_L_max_priority = 0;
+  battle.self.spell_L_max_priority_idx = -1;
+  battle.self.spell_R = [];
+  battle.self.spell_R_max_priority = 0;
+  battle.self.spell_R_max_priority_idx = -1;
+  for(var i, Ln = arr_spells.length; i < Ln; ++i) {
+    if (checkSpellPosible(new_L, new_R, arr_spells[i].gesture, true) >= 0) {
+      battle.self.spell_L.push(i);
+      if (battle.self.spell_L_max_priority < arr_spells[i].priority) {
+        battle.self.spell_L_max_priority = arr_spells[i].priority;
+        battle.self.spell_L_max_priority_idx = battle.self.spell_L.length - 1;
+      }
+    }
+    if (checkSpellPosible(new_R, new_L, arr_spells[i].gesture, true) >= 0) {
+      battle.self.spell_R.push(i);
+      if (battle.self.spell_R_max_priority < arr_spells[i].priority) {
+        battle.self.spell_R_max_priority = arr_spells[i].priority;
+        battle.self.spell_R_max_priority_idx = battle.self.spell_R.length - 1;
+      }
+    }
+  }
+  if (battle.self.spell_L_max_priority_idx != -1) {
+    battle.self.cast_spell_L = arr_spells[battle.self.spell_L[battle.self.spell_L_max_priority_idx]].name;
+  }
+  if (battle.self.spell_R_max_priority_idx != -1) {
+    battle.self.cast_spell_R = arr_spells[battle.self.spell_R[battle.self.spell_R_max_priority_idx]].name;
+  }
+  console.log('checkSpellCast', battle.self.cast_spell_L, battle.self.cast_spell_R);
+}
+
+function printBattle(battle) {
+  var i = 0, Ln = 0;
+  for (i = 0, Ln = battle.enemy.possible_spell.length; i < Ln; ++i) {
+    console.log('enemy', battle.enemy.left, battle.enemy.right, arr_spells[battle.enemy.possible_spell[i].spell_id].gesture, arr_spells[battle.enemy.possible_spell[i].spell_id].name, battle.enemy.possible_spell[i]);
+  }
+  for (i = 0, Ln = battle.self.possible_spell.length; i < Ln; ++i) {
+    console.log('self', battle.self.left, battle.self.right, arr_spells[battle.self.possible_spell[i].spell_id].gesture, arr_spells[battle.self.possible_spell[i].spell_id].name, battle.self.possible_spell[i]);
+  }
+  
+}
+
+
+function processBattle(battle) {
+  checkPossibleSpells(battle);
   for (i = 0; i < 2; ++i) {
     checkWarlockSpells(arr_warlock[i], battle);
     checkMostPossibleSpells(arr_warlock[i], battle);
   }
   
   spellDecision(battle);
-}
-
-function printBattle(battle, short_info) {
-  var i = 0, Ln = 0;
-  if (!short_info) {
-    for (i = 0, Ln = battle.enemy.possible_spell.length; i < Ln; ++i) {
-      console.log('enemy', battle.enemy.left, battle.enemy.right, arr_spells[battle.enemy.possible_spell[i].spell_id].gesture, battle.enemy.possible_spell[i]);
-    }
-    for (i = 0, Ln = battle.self.possible_spell.length; i < Ln; ++i) {
-      console.log('self', battle.self.left, battle.self.right, arr_spells[battle.self.possible_spell[i].spell_id].gesture, battle.self.possible_spell[i]);
-    }
-  }
-  for (i = 0; i < 2; ++i) {
-    for (var j = 0, Ln = arr_spell_type.length; j < Ln; ++j) {
-      if (short_info && (battle[arr_warlock[i]][arr_spell_type[j]][idx_l].turn === 0) && (battle[arr_warlock[i]][arr_spell_type[j]][idx_r] === 0)) {
-        continue;
-      }
-      console.log(arr_warlock[i], arr_spell_type[j], battle[arr_warlock[i]][arr_spell_type[j]][idx_l], battle[arr_warlock[i]][arr_spell_type[j]][idx_r]);
-    }
-  }
-}
-
-
-function processBattle(battle) {
-  checkPossibleSpells(battle);
-  battleDecision(battle);
+  checkSpellCast(battle);
+  //printBattle(battle, false);
+  return battle;
 }
 
 exports.processBattle = processBattle;

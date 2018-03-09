@@ -157,11 +157,7 @@ function startBattleProcessing(battle_id) {
     battle.battle_id = battle_id;
     storeBattleToFile(battle);
     AI.processBattle(battle);
-    //checkPossibleSpells(battle);
-    //battleDecision(battle);
-    //printBattle(battle, true);
     process.exit(0);
-    //console.log('BattleProcessing', battle.enemy.summon_monster);
   });
 }
 
