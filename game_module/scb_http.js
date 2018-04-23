@@ -149,7 +149,6 @@ function parseBattleWarlock(data, battle, warlock_code, login) {
   parseBattleWarlockStatus(getFieldValue(data, '<TD CLASS=lightbg', '>', '</TD>'), battle[warlock_code]);
 }
 
-
 function parseBattleWarlocks(data, battle) {
   var idx1 = 0, idx2 = 0, idx3 = 0;
   while((idx1 = data.indexOf('href="/player/', idx1)) != -1) {
