@@ -4,12 +4,17 @@ const WARLOCK_PASSWORD = process.argv[3];
 const SITE_LOGIN_URL = 'https://games.ravenblack.net/login';
 const SITE_STATUS_URL = 'https://games.ravenblack.net/player';
 const SITE_CHALLENGES_URL = 'https://games.ravenblack.net/challenges';
+const SITE_NEW_CHALLENGES_URL = 'https://games.ravenblack.net/newchallenge';
 const SITE_ACCEPT_CHALLENGE_URL = 'https://games.ravenblack.net/accept?back=challenges&num=';
 const SITE_BATTLE_URL = 'https://games.ravenblack.net/warlocks?num=';
-
+const SITE_WARLOCK_SUBMIT = 'https://games.ravenblack.net/warlocksubmit';
 var request = require('request');
 var fs = require('fs');
-var AI = require('./scb_ai.js');
+
+const CHALLENGE_ADD_CONDITION = 3;
+const CHALLENGE_ACCEPT_CONDITION = 3;
+
+const CYCLE_TIMEMOUT = 10 * 60 * 1000; // 10 minutes
 
 var warlock_logined = false;
 var fatal_error = false;
@@ -20,7 +25,7 @@ var battles_in_wait = [];
 function Cycle() {
   if (warlock_logined) {
     console.log('logined = true');
-    checkReadyBattle();
+    checkActiveBattle();
     /*if (battles_in_process.length < 3) {
       checkChallenges();
     }*/
@@ -35,7 +40,7 @@ function Cycle() {
 }
 
 function nextCycle() {
-  setTimeout(Cycle, 5000);
+  setTimeout(Cycle, CYCLE_TIMEMOUT);
 }
 
 function login() {
@@ -64,7 +69,7 @@ function login() {
   });
 }
 
-function checkReadyBattle() {
+function checkActiveBattle() {
   request.get({
       url:SITE_STATUS_URL, 
       jar: true,
@@ -77,19 +82,52 @@ function checkReadyBattle() {
     console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body); // Print the HTML for the Google homepage.
     battles_in_ready = parseBattles(body, 'Ready in battles');
-    for (var i = 0, Ln = battles_in_ready.length; i < Ln; ++i) {
-      if (battles_in_process.indexOf(battles_in_ready[i]) === -1) {
-        battles_in_process.push(battles_in_ready[i]);
-        startBattleProcessing(battles_in_ready[i]);
-      }
+    battles_in_wait = parseBattles(body, 'Waiting in battles');
+    for(var i = 0, Ln = battles_in_wait.length; i < Ln; ++i) {
+      forceCloseBattle(battles_in_wait[i]);
     }
-    battles_in_wait = parseBattles(body, 'Ready in battles');
-    if (battles_in_ready.length + battles_in_wait.length < 5) {
+    if (battles_in_ready.length + battles_in_wait.length < CHALLENGE_ACCEPT_CONDITION) {
       checkChallenges();
     } else {
       nextCycle();
     }
   });
+}
+
+function forceCloseBattle(battle_id) {
+  request.get({
+      url:SITE_BATTLE_URL + battle_id,
+      jar: true,
+      followRedirect: true
+     }, function(err,httpResponse,body) {
+    if (err) {
+      console.log('error:', err); // Print the error if one occurred
+      return;
+    }
+    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    //console.log('body:', body);
+    
+    var battle = parseBattle(body);
+    if (battle.force = 1) {
+      request.post({
+          url:SITE_WARLOCK_SUBMIT, 
+          //proxy: 'http://localhost:4128',
+          jar: true,
+          followRedirect: false,
+          form: {
+            turn: battle.turn,
+            num: battle.battle_id,
+            force: 1
+            }
+         }, function(err,httpResponse,body) {
+            if (err) {
+              console.log('error:', err); // Print the error if one occurred
+              return;
+            }
+      });
+    }
+  });
+  //SITE_WARLOCK_SUBMIT
 }
 
 function parseBattleTurn(body, battle) {
@@ -123,11 +161,16 @@ function parseBattleWarlocks(data, battle) {
   }  
 }
 
+function parseBattleForce(body, battle) {
+  battle.force = body.indexOf('<INPUT TYPE=SUBMIT VALUE="Force Surrender Attempt">') !== -1;
+}
+
 function parseBattle(body) {
   var battle = {turn:0,enemy:{},self:{}};
   parseBattleTurn(body, battle);
-  parseBattleWarlocks(body, battle);
-  console.log('parseBattle', 'after', battle);
+  parseBattleForce(body, battle);
+  //parseBattleWarlocks(body, battle);
+  //console.log('parseBattle', 'after', battle);
   return battle;
 }
 
@@ -285,13 +328,41 @@ function checkChallenges() {
     var battles_to_accept = parseChallenges(body);
     var accepted_cnt = 0;
     for (var i = 0, Ln = battles_to_accept.length; i < Ln; ++i) {
-      if (accepted_cnt + battles_in_ready.length + battles_in_wait.length < 5) {
-        //acceptChallenge(battles_to_accept[i]);
+      if (accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ACCEPT_CONDITION) {
+        acceptChallenge(battles_to_accept[i]);
         ++accepted_cnt;
       }
     }
-    nextCycle();
+    if (accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ADD_CONDITION) {
+      addChallenges(CHALLENGE_ADD_CONDITION - (accepted_cnt + battles_in_ready.length + battles_in_wait.length));
+    } else {
+      nextCycle();
+    }
   });
+}
+
+function addChallenges(add_cnt) {
+  while(--add_cnt >= 0) {
+    request.post({
+        url:SITE_NEW_CHALLENGES_URL, 
+        jar: true,
+        followRedirect: true,
+        form: { 
+           fast: 1,
+           players: 2,
+           friendly: 2,
+           game: 1
+           blurb: 'ParaFC Maladroit Training Battle with AI Player, NO BOT allowed ;) join to community https://fb.com/WarlocksDuel/'
+           }
+       }, function(err,httpResponse,body) {
+      if (err) {
+        console.log('error:', err); // Print the error if one occurred
+        return;
+      }
+      console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    });
+  }
+  nextCycle();
 }
 
 function acceptChallenge(battle_id) {
