@@ -14,7 +14,7 @@ var fs = require('fs');
 const CHALLENGE_ADD_CONDITION = 3;
 const CHALLENGE_ACCEPT_CONDITION = 3;
 
-const CYCLE_TIMEMOUT = 10 * 60 * 1000; // 10 minutes
+const CYCLE_TIMEMOUT = 10 * 60 * 1000;// 10 minutes
 
 var warlock_logined = false;
 var fatal_error = false;
@@ -22,7 +22,9 @@ var battles_in_process = [];
 var battles_in_ready = [];
 var battles_in_wait = [];
 
+var idx = 0;
 function Cycle() {
+  console.log('Cycle ' + (++idx));
   if (warlock_logined) {
     console.log('logined = true');
     checkActiveBattle();
@@ -39,8 +41,9 @@ function Cycle() {
   }*/
 }
 
-function nextCycle() {
-  setTimeout(Cycle, CYCLE_TIMEMOUT);
+function nextCycle(force) {
+  console.log('nextCycle', force, CYCLE_TIMEMOUT);
+  setTimeout(Cycle, force ? 1000 : CYCLE_TIMEMOUT);
 }
 
 function login() {
@@ -58,11 +61,11 @@ function login() {
           console.log('error:', err); // Print the error if one occurred
           return;
         }
-        console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
-        console.log('body:', body); // Print the HTML for the Google homepage.
+        console.log('login', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
+        //console.log('body:', body); // Print the HTML for the Google homepage.
         if ((httpResponse.statusCode === 302) && (httpResponse.headers['location'] === 'player')) {
           warlock_logined = true;
-          nextCycle();
+          nextCycle(true);
         } else {
           fatal_error = true;
         }
@@ -70,6 +73,7 @@ function login() {
 }
 
 function checkActiveBattle() {
+  console.log('checkActiveBattle');
   request.get({
       url:SITE_STATUS_URL, 
       jar: true,
@@ -79,12 +83,13 @@ function checkActiveBattle() {
       console.log('error:', err); // Print the error if one occurred
       return;
     }
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    console.log('checkActiveBattle', 'statusCode:', httpResponse.statusCode);//, httpResponse.headers);
     //console.log('body:', body); // Print the HTML for the Google homepage.
     battles_in_ready = parseBattles(body, 'Ready in battles');
     battles_in_wait = parseBattles(body, 'Waiting in battles');
+    console.log(battles_in_ready, battles_in_wait);
     for(var i = 0, Ln = battles_in_wait.length; i < Ln; ++i) {
-      forceCloseBattle(battles_in_wait[i]);
+      checkIsBattlePossibleCloseForce(battles_in_wait[i]);
     }
     if (battles_in_ready.length + battles_in_wait.length < CHALLENGE_ACCEPT_CONDITION) {
       checkChallenges();
@@ -94,7 +99,7 @@ function checkActiveBattle() {
   });
 }
 
-function forceCloseBattle(battle_id) {
+function checkIsBattlePossibleCloseForce(battle_id) {
   request.get({
       url:SITE_BATTLE_URL + battle_id,
       jar: true,
@@ -104,11 +109,13 @@ function forceCloseBattle(battle_id) {
       console.log('error:', err); // Print the error if one occurred
       return;
     }
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    console.log('checkIsBattlePossibleCloseForce', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body);
     
     var battle = parseBattle(body);
-    if (battle.force = 1) {
+    console.log(battle);
+    if (battle.force) {
+      console.log('Try close battle force');
       request.post({
           url:SITE_WARLOCK_SUBMIT, 
           //proxy: 'http://localhost:4128',
@@ -192,7 +199,7 @@ function startBattleProcessing(battle_id) {
       console.log('error:', err); // Print the error if one occurred
       return;
     }
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    console.log('startBattleProcessing', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body);
     
     var battle = parseBattle(body);
@@ -313,6 +320,7 @@ function parseChallenges(body) {
 //
 
 function checkChallenges() {
+  console.log('checkChallenges');
   request.get({
       url:SITE_CHALLENGES_URL, 
       jar: true,
@@ -322,7 +330,7 @@ function checkChallenges() {
       console.log('error:', err); // Print the error if one occurred
       return;
     }
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    console.log('checkChallenges', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body); // Print the HTML for the Google homepage.
     var battles_to_accept = parseChallenges(body);
     var accepted_cnt = 0;
@@ -350,21 +358,22 @@ function addChallenges(add_cnt) {
            fast: 1,
            players: 2,
            friendly: 2,
-           game: 1
-           blurb: 'ParaFC Maladroit Training Battle with AI Player, NO BOT allowed ;) join to community https://fb.com/WarlocksDuel/'
+           game: 1,
+           blurb: "ParaFC Maladroit Training Battle with AI Player, NO BOT allowed ;) join to community https://fb.com/WarlocksDuel/"
            }
        }, function(err,httpResponse,body) {
       if (err) {
         console.log('error:', err); // Print the error if one occurred
         return;
       }
-      console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+      console.log('addChallenges', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
     });
   }
   nextCycle();
 }
 
 function acceptChallenge(battle_id) {
+  console.log('acceptChallenge');
   request.get({
       url:SITE_ACCEPT_CHALLENGE_URL + battle_id, 
       jar: true,
@@ -374,7 +383,7 @@ function acceptChallenge(battle_id) {
       console.log('error:', err); // Print the error if one occurred
       return;
     }
-    console.log('statusCode:', httpResponse.statusCode, httpResponse.headers);
+    console.log('acceptChallenge', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
     //console.log('body:', body);
   });
 }
