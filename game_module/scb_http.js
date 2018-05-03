@@ -110,7 +110,13 @@ function checkIsBattlePossibleCloseForce(battle_id) {
     //console.log('body:', body);
     
     var battle = parseBattle(body);
-    console.log(battle);
+    battle.battle_id = battle_id;
+    var frm = {
+            force: 1,
+            turn: battle.turn,
+            num: battle.battle_id
+            };
+    console.log(battle_id, battle, JSON.stringify(frm));
     if (battle.force) {
       console.log('Try close battle force');
       request.post({
@@ -118,16 +124,13 @@ function checkIsBattlePossibleCloseForce(battle_id) {
           //proxy: 'http://localhost:4128',
           jar: true,
           followRedirect: false,
-          form: {
-            turn: battle.turn,
-            num: battle.battle_id,
-            force: 1
-            }
+          form: frm
          }, function(err,httpResponse,body) {
             if (err) {
               console.log('error:', err); // Print the error if one occurred
               return;
             }
+            console.log('checkIsBattlePossibleCloseForce', 'try close', httpResponse.statusCode, httpResponse.headers);
       });
     }
   });
@@ -135,7 +138,7 @@ function checkIsBattlePossibleCloseForce(battle_id) {
 }
 
 function parseBattleTurn(body, battle) {
-  battle.turn = getInt(getFieldValue(body, '<H2><U>Turn', ' ', ' '));
+  battle.turn = getInt(getFieldValue(body, '<INPUT TYPE=HIDDEN NAME=turn VALUE=', '"', '"'));
 }
 
 function parseBattleWarlockStatus(data, warlock) {
