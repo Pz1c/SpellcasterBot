@@ -26,9 +26,6 @@ function Cycle() {
   if (warlock_logined) {
     console.log('logined = true');
     checkActiveBattle();
-    /*if (battles_in_process.length < 3) {
-      checkChallenges();
-    }*/
   } else {
     login();
   }
@@ -257,6 +254,7 @@ function parseChallengeLevel(level, battle) {
 
 function parseChallengeDesc(description, battle) {
   battle.bot_allowed = description.indexOf('NO BOT') === -1;
+  battle.is_bot = description.indexOf('Training Battle with AI Player') !== -1;
   battle.desc = description;
 }
 
@@ -287,6 +285,9 @@ function parseChallenge(row) {
   return res;
 }
 
+var total_ai_challenges = 0;
+const max_ai_challenges = 3;
+
 function parseChallenges(body) {
   var res = [];
   var idx1 = body.indexOf('<TD CLASS=darkbg>Description</TD>');
@@ -301,6 +302,9 @@ function parseChallenges(body) {
       continue;
     }
     var challenge = parseChallenge(arr_table[i].replace('<TR>', ''));
+    if (challenge.is_bot) {
+      ++total_ai_challenges;
+    }
     if (!challenge.bot_allowed || (challenge.battle_id === 0) || (challenge.level > 0) || (challenge.count > 2)) {
       continue;
     }
@@ -332,8 +336,8 @@ function checkChallenges() {
         ++accepted_cnt;
       }
     }
-    if (accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ADD_CONDITION) {
-      addChallenges(CHALLENGE_ADD_CONDITION - (accepted_cnt + battles_in_ready.length + battles_in_wait.length));
+    if ((accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ADD_CONDITION) && (total_ai_challenges < max_ai_challenges)) {
+      addChallenges(Math.min(CHALLENGE_ADD_CONDITION - (accepted_cnt + battles_in_ready.length + battles_in_wait.length), (max_ai_challenges - total_ai_challenges)));
     } else {
       nextCycle();
     }
