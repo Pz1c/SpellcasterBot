@@ -16,7 +16,7 @@ var fs = require('fs');
 const CHALLENGE_ADD_CONDITION = 2;
 const CHALLENGE_ACCEPT_CONDITION = 5;
 
-const CYCLE_TIMEMOUT = 20 * 1000;// 20 sec * 3 
+const CYCLE_TIMEMOUT = 10 * 60 * 1000; // 10 minutes
 
 var warlock_logined = false;
 var fatal_error = false;
