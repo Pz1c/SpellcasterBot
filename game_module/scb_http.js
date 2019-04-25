@@ -313,7 +313,7 @@ function parseChallenge(row) {
 }
 
 var total_ai_challenges = 0;
-const max_ai_challenges = 3;
+const max_ai_challenges = 2;
 
 function parseChallenges(body) {
   var res = [];
