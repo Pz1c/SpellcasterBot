@@ -1,5 +1,7 @@
-const WARLOCK_LOGIN    = process.argv[2];
-const WARLOCK_PASSWORD = process.argv[3];
+const ARR_WARLOCK_LOGIN = process.argv[2].split(",");
+const WARLOCK_PASSWORD  = process.argv[3];
+var WARLOCK_LOGIN       = ARR_WARLOCK_LOGIN[0];
+var WARLOCK_IDX         = 0;
 
 const SITE_LOGIN_URL = 'https://games.ravenblack.net/login';
 const SITE_STATUS_URL = 'https://games.ravenblack.net/player';
@@ -12,9 +14,9 @@ var request = require('request');
 var fs = require('fs');
 
 const CHALLENGE_ADD_CONDITION = 3;
-const CHALLENGE_ACCEPT_CONDITION = 3;
+const CHALLENGE_ACCEPT_CONDITION = 5;
 
-const CYCLE_TIMEMOUT = 10 * 60 * 1000;// 10 minutes
+const CYCLE_TIMEMOUT = 30 * 1000;// 30 sec * 3 
 
 var warlock_logined = false;
 var fatal_error = false;
@@ -38,9 +40,21 @@ function Cycle() {
   }*/
 }
 
-function nextCycle(force) {
-  console.log('nextCycle', force, CYCLE_TIMEMOUT);
-  setTimeout(Cycle, force ? 1000 : CYCLE_TIMEMOUT);
+function nextCycle(force, error) {
+  console.log('nextCycle', force, CYCLE_TIMEMOUT, error);
+  if (!force) {// change login
+    if (++WARLOCK_IDX >= ARR_WARLOCK_LOGIN.length) {
+      WARLOCK_IDX = 0;
+    }
+    WARLOCK_LOGIN = ARR_WARLOCK_LOGIN[WARLOCK_IDX];
+    warlock_logined = false;
+    console.log('Change login', WARLOCK_LOGIN);
+  }
+  var timeout = force ? 5000 : CYCLE_TIMEMOUT;
+  if (error) {
+    timeout = 2 * 60 * 1000;
+  }
+  setTimeout(Cycle, timeout);
 }
 
 function login() {
@@ -56,6 +70,7 @@ function login() {
      }, function(err,httpResponse,body) {
         if (err) {
           console.log('error:', err); // Print the error if one occurred
+          nextCycle();
           return;
         }
         console.log('login', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
@@ -63,8 +78,10 @@ function login() {
         if ((httpResponse.statusCode === 302) && (httpResponse.headers['location'] === 'player')) {
           warlock_logined = true;
           nextCycle(true);
-        } else {
+        } else if (httpResponse.statusCode === 200) {
           fatal_error = true;
+        } else {
+          nextCycle();
         }
   });
 }
@@ -78,6 +95,7 @@ function checkActiveBattle() {
      }, function(err,httpResponse,body) {
     if (err) {
       console.log('error:', err); // Print the error if one occurred
+      nextCycle();
       return;
     }
     console.log('checkActiveBattle', 'statusCode:', httpResponse.statusCode);//, httpResponse.headers);
@@ -104,6 +122,7 @@ function checkIsBattlePossibleCloseForce(battle_id) {
      }, function(err,httpResponse,body) {
     if (err) {
       console.log('error:', err); // Print the error if one occurred
+      nextCycle();
       return;
     }
     console.log('checkIsBattlePossibleCloseForce', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
@@ -128,6 +147,7 @@ function checkIsBattlePossibleCloseForce(battle_id) {
          }, function(err,httpResponse,body) {
             if (err) {
               console.log('error:', err); // Print the error if one occurred
+              nextCycle();
               return;
             }
             console.log('checkIsBattlePossibleCloseForce', 'try close', httpResponse.statusCode, httpResponse.headers);
@@ -197,6 +217,7 @@ function startBattleProcessing(battle_id) {
      }, function(err,httpResponse,body) {
     if (err) {
       console.log('error:', err); // Print the error if one occurred
+      nextCycle();
       return;
     }
     console.log('startBattleProcessing', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
@@ -296,13 +317,13 @@ function parseChallenge(row) {
 }
 
 var total_ai_challenges = 0;
-const max_ai_challenges = 3;
+const max_ai_challenges = 2;
 
 function parseChallenges(body) {
   var res = [];
   var idx1 = body.indexOf('<TD CLASS=darkbg>Description</TD>');
   if (idx1 === -1) {
-    return res;
+    return [-1];
   }
   idx1 = body.indexOf('<TR><TD>', idx1);
   var idx2 = body.indexOf('</TABLE>', idx1);
@@ -335,20 +356,32 @@ function checkChallenges() {
      }, function(err,httpResponse,body) {
     if (err) {
       console.log('error:', err); // Print the error if one occurred
+      nextCycle();
       return;
     }
     console.log('checkChallenges', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
+    if (httpResponse.statusCode !== 200) {
+      nextCycle();
+      return;
+    }
     //console.log('body:', body); // Print the HTML for the Google homepage.
-    var battles_to_accept = parseChallenges(body);
+    total_ai_challenges = 0;
     var accepted_cnt = 0;
+    var battles_to_accept = parseChallenges(body);
+    
     for (var i = 0, Ln = battles_to_accept.length; i < Ln; ++i) {
+      if ((i === 0) && (battles_to_accept[i] === -1)) {
+        // something goes wrong, perhapse 
+        nextCycle();
+        return;
+      }
       if (accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ACCEPT_CONDITION) {
         acceptChallenge(battles_to_accept[i]);
         ++accepted_cnt;
       }
     }
     if ((accepted_cnt + battles_in_ready.length + battles_in_wait.length < CHALLENGE_ADD_CONDITION) && (total_ai_challenges < max_ai_challenges)) {
-      addChallenges(Math.min(CHALLENGE_ADD_CONDITION - (accepted_cnt + battles_in_ready.length + battles_in_wait.length), (max_ai_challenges - total_ai_challenges)));
+      addChallenges(1/*Math.min(CHALLENGE_ADD_CONDITION - (accepted_cnt + battles_in_ready.length + battles_in_wait.length), Math.max(0, max_ai_challenges - total_ai_challenges))*/);
     } else {
       nextCycle();
     }
@@ -371,6 +404,7 @@ function addChallenges(add_cnt) {
        }, function(err,httpResponse,body) {
       if (err) {
         console.log('error:', err); // Print the error if one occurred
+        nextCycle();
         return;
       }
       console.log('addChallenges', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
@@ -388,6 +422,7 @@ function acceptChallenge(battle_id) {
      }, function(err,httpResponse,body) {
     if (err) {
       console.log('error:', err); // Print the error if one occurred
+      nextCycle();
       return;
     }
     console.log('acceptChallenge', 'statusCode:', httpResponse.statusCode, httpResponse.headers);
