@@ -1,7 +1,7 @@
-const ARR_WARLOCK_LOGIN = process.argv[2].split(",");
-const WARLOCK_PASSWORD  = process.argv[3];
-var WARLOCK_LOGIN       = ARR_WARLOCK_LOGIN[0];
-var WARLOCK_IDX         = 0;
+const ARR_WARLOCK_LOGIN = process.argv[2].split(',');
+var WARLOCK_IDX       = 0;
+var WARLOCK_LOGIN     = ARR_WARLOCK_LOGIN[WARLOCK_IDX];
+var WARLOCK_PASSWORD  = process.argv[3];
 
 const SITE_LOGIN_URL = 'https://games.ravenblack.net/login';
 const SITE_STATUS_URL = 'https://games.ravenblack.net/player';
@@ -13,10 +13,10 @@ const SITE_WARLOCK_SUBMIT = 'https://games.ravenblack.net/warlocksubmit';
 var request = require('request');
 var fs = require('fs');
 
-const CHALLENGE_ADD_CONDITION = 3;
+const CHALLENGE_ADD_CONDITION = 2;
 const CHALLENGE_ACCEPT_CONDITION = 5;
 
-const CYCLE_TIMEMOUT = 30 * 1000;// 30 sec * 3 
+const CYCLE_TIMEMOUT = 10 * 60 * 1000; // 10 minutes
 
 var warlock_logined = false;
 var fatal_error = false;
@@ -355,7 +355,7 @@ function checkChallenges() {
       followRedirect: true
      }, function(err,httpResponse,body) {
     if (err) {
-      console.log('error:', err); // Print the error if one occurred
+      console.log('error:', httpResponse.statusCode, err); // Print the error if one occurred
       nextCycle();
       return;
     }
