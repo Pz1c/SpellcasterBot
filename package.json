@@ -4,16 +4,17 @@
   "description": "bot for games.ravenblack.net",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js Construct,EarthGolem,IronGolem xsw2#EDC",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SteelProgramming/SpellcasterBot.git"
+    "url": "git+https://github.com/Pz1C/SpellcasterBot.git"
   },
   "author": "Galbarad",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SteelProgramming/SpellcasterBot/issues"
+    "url": "https://github.com/Pz1C/SpellcasterBot/issues"
   },
-  "homepage": "https://github.com/SteelProgramming/SpellcasterBot#readme"
+  "homepage": "https://github.com/Pz1C/SpellcasterBot#readme"
 }
