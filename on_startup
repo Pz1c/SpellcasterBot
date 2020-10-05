@@ -1,0 +1,1 @@
+nodemon --exec npm sstart
